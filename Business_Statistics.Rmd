@@ -1,5 +1,5 @@
 ---
-title: 'Business Statistics Assessment IB94X0 2020-2021 #1'
+title: 'Business Statistics'
 author: Mehmet Fatih Karademir
 output: 
    html_document:
