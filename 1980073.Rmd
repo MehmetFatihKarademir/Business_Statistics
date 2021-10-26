@@ -1,6 +1,6 @@
 ---
 title: 'Business Statistics Assessment IB94X0 2020-2021 #1'
-author: 1980073 # Put your student number here, not your name
+author: Mehmet Fatih Karademir
 output: 
    html_document:
     toc: true
@@ -230,36 +230,4 @@ anova(LinearModel4, LinearModel3)
 When comparing the two models, it is evident that the sales difference percentage does not vary significantly by changes in staff_turnover, F = 1.0004 , p= 0.3923.
 
 ---
-
-Rename this file and the folder it is in with your student number (e.g., "1912345.Rmd")
-
-Submit this file and the knitted html as a zip file (e.g., 1912345.zip) _by right clicking on the folder to zip it_. That is, the zip file 1912345.zip should contain the folder 1912345 with _only_ the files 1912345.Rmd and 1912345.html
-
----
-
-# Question 1 Section 1
-
-Plain English answer here!
-
----
-
-# Question 2 Section 1
-
-Plain English answer here!
-
----
-
-# Question 1 Section 2
-
-```{r}
-# Commented R code here!
-```
-
----
-
-# Question 2 Section 2
-
-```{r}
-# Commented R code here!
-```
 
