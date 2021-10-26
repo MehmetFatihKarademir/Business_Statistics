@@ -1,0 +1,265 @@
+---
+title: 'Business Statistics Assessment IB94X0 2020-2021 #1'
+author: 1980073 # Put your student number here, not your name
+output: 
+   html_document:
+    toc: true
+    toc_depth: 3 
+---
+
+
+# Question 1 
+
+## Linear Model Using GBP
+
+Sales difference for stores participating in the trial is 426,893  GBP 95% CI [-78,951 -- 115,128]. The sales difference for stores not participating in the trial is 18,089 GBP 95% CI [327,304 -- 526,482]. The sales difference is 408,804 GBP 95% CI [-547,853 -- -269,755] less for stores that do not participate in the trial. 
+
+The sales difference varies significantly by whether a store participates in the trial or not, F = 33.354, p= 1.3e-08.
+
+![Figure 1: Estimation Approach Using GBP](000003.png)
+
+## Linear Model Using GBP Percentage
+
+Sales change for stores participating in the trial is 1.416 95% CI [-0.449 --  0.653]. The sales change for stores not participating in the trial is 0.102% 95% CI [0.850 -- 1.981]. The sales difference is -1.31% 95% CI [-2.1  -- -0.525] less for stores that do not participate in the trial. 
+
+The sales difference varies significantly by whether a store participates in the trial or not, F = 10.696, p= 0.001143.
+
+# GBP or Percentages
+
+I would use the percentage difference for the remaining analysis because of how much more normally distributed it is. Because I can not be sure if the outliers are truly outliers, I cannot remove them. For this reason, I believe it is better to normalize the data as a percent. 
+
+It makes much more sense to use percentages when talking about all stores' sales difference. There are certainly very small stores who's total yearly sales do not come close to the estimated mean sales difference in GBP. All stores who participate in the trial have, on average, a sales change of 1.3% compared to those who dont. This makes much more sense when considering the fact that there could be very small stores whos total yearly profit is not even hald of the estimated mean GBP sales difference. 
+
+
+
+# Question 2
+
+## Percent Sales Change Controlling for Intrial and Outlettype
+
+The sales difference percentage varies significantly across outlet types by whether a store participates in the trial or not, F = 47.891, p= < 2.2e-16.
+
+![Figure 1: Estimation Approach Using GBP as Percent](000004.png)
+
+The chart above shows the output of the estimation approach for the effect of intrial and outlettype on percent difference. From the chart above, it can be seen that all outlet types that participate in the trial seem to have an percent increase in sales. While the confidence intervals are greater for outlets that participate in the trial, we cannot say that this difference is different than 0 becasue the confidence intervals touch. 
+
+## Percent Sales Change Controlling for Intrial, outlettype, and staff_turnover
+
+The sales difference percentage does not vary significantly by changes in staff_turnover, F = 0.7113, p= 0.3993862.
+
+![Figure 1: Estimation Approach Using GBP as Percent](fatih.png)
+
+From the graphs, which plot the estimation approach data, it seems as if staff_turnover does not improve the fit of the model. The two charts look identical, which would indicate that staff_turnover does not imporve the model. 
+
+
+```{r setup}
+library(tidyverse)
+library(emmeans) # for emmeans() and pairs()
+library(gridExtra) # for grid.arrange()
+options(width=100)
+library(scales)
+```
+
+
+```{r}
+# Preparing the data the data
+#Read the data and view it
+salesdata <- read_csv("C:/Users/mehme/OneDrive/Masaüstü/assgnmnet/sales_data.csv")
+view(salesdata)
+```
+
+```{r}
+# Look at the summary and structure of the data to see if there is anything wrong with the data
+summary(salesdata)
+str(salesdata)
+```
+```{r}
+#converting categorical data to factors
+salesdata$intrial <- factor(salesdata$intrial)
+salesdata$outlettype <- factor(salesdata$outlettype)
+str(salesdata)
+```
+```{r}
+#Creating sales difference and sales percentage columns to use in the further analysis
+salesdata
+salesdata <- mutate(salesdata, salesdiff=sales_2-sales_1)
+salesdata <- mutate(salesdata, salesperc=(sales_2-sales_1)/(salesdata$sales_1)*100)
+boxplot(salesdata$salesdiff)
+boxplot(salesdata$staff_turnover)
+```
+```{r}
+#checking the graph of the data to see sales difference
+ggplot(salesdata, aes(x =salesdiff)) + 
+    geom_histogram(binwidth=150000)
+    labs(title="sales", x="Sales" , y="Frequency")
+```
+
+
+```{r}
+#graphing the data using sales difference and outlettype columns
+
+ggplot(salesdata, aes(x=salesdiff, fill=outlettype)) + geom_histogram(position="identity", alpha=0.5, binwidth=100000) 
+
+```
+
+LM with GBP
+```{r}
+#Making a linear model to use estimation approach
+
+LinearModel <- lm(salesdiff~intrial, data=salesdata)
+(  LinearModel.emm <- emmeans(LinearModel, ~intrial)  )
+(  LinearModel.contrast <- confint(pairs(LinearModel.emm))  )
+```
+
+Sales difference for stores participating in the trial is 426,893  GBP 95% CI [-78,951 -- 115,128]. The sales difference for stores not participating in the trial is 18,089 GBP 95% CI [327,304 -- 526,482]. The sales difference is 408,804 GBP 95% CI [-547,853 -- -269,755] less for stores that do not participate in the trial. 
+
+```{r}
+grid.arrange(
+    ggplot(summary(LinearModel.emm), aes(x=intrial, y=emmean, ymin=lower.CL, ymax=upper.CL)) + geom_point() + geom_linerange() + labs(y="salesdifference", x="intrial", subtitle="Error bars are 95% CIs", title="salesdifference")+ scale_y_continuous(labels = comma)
+    , 
+    ggplot(LinearModel.contrast, aes(x = contrast, y=estimate, ymin=lower.CL, ymax=upper.CL)) + geom_point() + geom_linerange() + 
+        labs(y="salesdifference", x="Contrast", subtitle="Error bars are 95% CIs", title="salesdifference") + geom_hline(yintercept=0, lty=2)+ scale_y_continuous(labels = comma),
+    ncol=2
+)
+
+```
+
+```{r}
+#Using anova to report Null Hyphotesis Test
+anova(LinearModel)
+
+```
+
+The sales difference varies significantly by whether a store participates in the trial or not, F = 33.354, p= 1.3e-08.
+
+
+LM with Percentage
+```{r}
+#Making a linear model to use estimation approach
+
+LinearModel2 <- lm(salesperc~intrial, data=salesdata)
+(  LinearModel2.emm <- emmeans(LinearModel2, ~intrial)  )
+(  LinearModel2.contrast <- confint(pairs(LinearModel2.emm))  )
+```
+
+Sales change for stores participating in the trial is 1.416 95% CI [-0.449 --  0.653]. The sales change for stores not participating in the trial is 0.102% 95% CI [0.850 -- 1.981]. The sales difference is -1.31% 95% CI [-2.1  -- -0.525] less for stores that do not participate in the trial. 
+
+```{r}
+grid.arrange(
+    ggplot(summary(LinearModel2.emm), aes(x=intrial, y=emmean, ymin=lower.CL, ymax=upper.CL)) + geom_point() + geom_linerange() + labs(y="salesdifference", x="intrial", subtitle="Error bars are 95% CIs", title="salesdifference")+ scale_y_continuous(labels = comma)
+    , 
+    ggplot(LinearModel2.contrast, aes(x = contrast, y=estimate, ymin=lower.CL, ymax=upper.CL)) + geom_point() + geom_linerange() + 
+        labs(y="salesdifference", x="Contrast", subtitle="Error bars are 95% CIs", title="salesdifference") + geom_hline(yintercept=0, lty=2)+ scale_y_continuous(labels = comma),
+    ncol=2
+)
+
+```
+
+
+```{r}
+#Using anova to report Null Hyphotesis Test
+anova(LinearModel2)
+
+```
+The sales difference varies significantly by whether a store participates in the trial or not, F = 10.696, p= 0.001143.
+
+
+
+Percentage V.S. GBP
+```{r}
+#add lables 
+grid.arrange(
+ggplot(salesdata, aes(x = salesperc)) + geom_histogram(),
+ggplot(salesdata, aes(x = salesdiff)) + geom_histogram())
+
+```
+I would use the percentage difference for the remaining analysis because of how much more normally distributed it is. Because I can not be sure if the outliers are truly outliers, I cannot remove them. For this reason, I believe it is better to normalize the data as a percent. 
+
+It makes much more sense to use percentages when talking about all stores' sales difference. There are certainly very small stores whos total yearly sales do not come close to the estimated mean sales difference in GBP. All stores who participate in the trial have, on average, a sales change of 1.3% compared to those who dont. This makes much more sense when considering the fact that there could be very small stores whos total yearly profit is not even hald of the estimated mean GBP sales difference. 
+
+
+---
+# Question 2
+
+```{r}
+#question 2
+LinearModel3 <- lm(salesperc~intrial + outlettype, data=salesdata)
+(  LinearModel3.emm <- emmeans(LinearModel3, ~intrial + outlettype)  )
+(  LinearModel3.contrast <- confint(pairs(LinearModel3.emm))  )
+
+anova(LinearModel3)
+
+```
+The sales difference percentage varies significantly across outlet types by whether a store participates in the trial or not, F = 47.891, p= < 2.2e-16.
+
+
+```{r}
+ ggplot(summary(LinearModel3.emm), aes(x=outlettype, y=emmean, ymin=lower.CL, ymax=upper.CL, color = intrial)) + geom_point() + geom_linerange() + labs(title = "Percent Sales Change by Outlettype and Intrial", y = "Percent Change", x = "Outlettype")
+```
+The chart above shows the output of the estimation approach for the effect of intrial and outlettype on percent difference. From the chart above, it can be seen that all outlet types that participate in the trial seem to have an percent increase in sales. While the confidence intervals are greater for outlets that participate in the trial, we cannot say that this difference is different than 0 becasue the confidence intervals touch. 
+
+
+
+
+Outlettype with Staff_turnover
+```{r}
+#Using linear model to see how outlettype and staff_turnover effects the sales 
+LinearModel4 <- lm(salesperc~intrial + outlettype * staff_turnover, data=salesdata)
+(  LinearModel4.emm <- emmeans(LinearModel4, ~intrial + outlettype * staff_turnover)  )
+(  LinearModel4.contrast <- confint(pairs(LinearModel4.emm))  )
+
+anova(LinearModel4)
+
+```
+
+The sales difference percentage does not vary significantly by changes in staff_turnover, F = 0.7113, p= 0.3993862.
+
+
+```{r}
+grid.arrange(
+ggplot(summary(LinearModel4.emm), aes(x=outlettype, y=emmean, ymin=lower.CL, ymax=upper.CL, color = intrial)) + geom_point() + geom_linerange() + labs( y = "Percent Change", title = "Percentage Change by Intrial and Outlettype"),
+ggplot(summary(LinearModel3.emm), aes(x=outlettype, y=emmean, ymin=lower.CL, ymax=upper.CL, color = intrial)) + geom_point() + geom_linerange()+ labs( y = "Percent Change", title = "Percentage Change by Intrial, Outlettype, and Staff_turnover"))
+
+```
+From the graphs, which plot the estimation approach data, it seems as if staff_turnover does not improve the fit of the model. The two charts look identical, which would indicate that staff_turnover does not imporve the model. 
+
+
+Does Staff_turnover improve the fit? 
+```{r}
+anova(LinearModel4, LinearModel3)
+```
+When comparing the two models, it is evident that the sales difference percentage does not vary significantly by changes in staff_turnover, F = 1.0004 , p= 0.3923.
+
+---
+
+Rename this file and the folder it is in with your student number (e.g., "1912345.Rmd")
+
+Submit this file and the knitted html as a zip file (e.g., 1912345.zip) _by right clicking on the folder to zip it_. That is, the zip file 1912345.zip should contain the folder 1912345 with _only_ the files 1912345.Rmd and 1912345.html
+
+---
+
+# Question 1 Section 1
+
+Plain English answer here!
+
+---
+
+# Question 2 Section 1
+
+Plain English answer here!
+
+---
+
+# Question 1 Section 2
+
+```{r}
+# Commented R code here!
+```
+
+---
+
+# Question 2 Section 2
+
+```{r}
+# Commented R code here!
+```
+
